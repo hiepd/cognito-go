@@ -41,14 +41,18 @@ type PublicKey struct {
 type PublicKeys map[string]PublicKey
 
 func NewCognito(region, usePoolId, clientId string) (*Cognito, error) {
+	// validate region and usePoolId, make sure they are present
 	if region == "" || usePoolId == "" {
 		return nil, fmt.Errorf("invalid region or use pool id: %w", ErrInvalidParam)
 	}
-	iss := fmt.Sprintf("https://cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json", region, usePoolId)
-	publicKeys, err := getPublicKeys(iss)
+
+	iss := fmt.Sprintf("https://cognito-idp.%s.amazonaws.com/%s", region, usePoolId)
+	pkUrl := fmt.Sprintf("%s/.well-known/jwks.json", iss)
+	publicKeys, err := getPublicKeys(pkUrl)
 	if err != nil {
 		return nil, err
 	}
+
 	return &Cognito{
 		ClientId:   clientId,
 		Iss:        iss,
@@ -59,6 +63,10 @@ func NewCognito(region, usePoolId, clientId string) (*Cognito, error) {
 func (c *Cognito) VerifyToken(tokenStr string) (*jwt.Token, error) {
 	// parse token and verify signature
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		// validate token signing method
+		if alg := token.Method.Alg(); alg != "RS256" {
+			return nil, fmt.Errorf("invalid signing method %s. signing method must be RS256", alg)
+		}
 		return c.getCert(token)
 	})
 
@@ -67,14 +75,17 @@ func (c *Cognito) VerifyToken(tokenStr string) (*jwt.Token, error) {
 	}
 
 	// verify claims
+	// verify audience claim
 	if !token.Claims.(jwt.MapClaims).VerifyAudience(c.ClientId, false) {
 		return token, errors.New("audience is invalid")
 	}
 
+	// verify expire time
 	if !token.Claims.(jwt.MapClaims).VerifyExpiresAt(time.Now().Unix(), true) {
 		return token, errors.New("token expired")
 	}
 
+	// verify issuer
 	if !token.Claims.(jwt.MapClaims).VerifyIssuer(c.Iss, true) {
 		return token, errors.New("iss is invalid")
 	}
@@ -83,10 +94,6 @@ func (c *Cognito) VerifyToken(tokenStr string) (*jwt.Token, error) {
 }
 
 func (c *Cognito) getCert(token *jwt.Token) (*rsa.PublicKey, error) {
-	if alg := token.Method.Alg(); alg != "RS256" {
-		return nil, fmt.Errorf("invalid signing method %s. signing method must be RS256", alg)
-	}
-
 	kid := token.Header["kid"].(string)
 	key, ok := c.PublicKeys[kid]
 	if !ok {
@@ -115,34 +122,35 @@ func getPublicKeys(iss string) (PublicKeys, error) {
 	// iterate through list of keys and assign them to key map
 	publicKeys := make(map[string]PublicKey)
 	for _, key := range respJson.Keys {
-		if err := key.SetPEM(); err != nil {
+		if pem, err := parsePEM(key); err != nil {
 			return nil, err
+		} else {
+			key.PEM = pem
 		}
 		publicKeys[key.Kid] = key
 	}
 	return publicKeys, nil
 }
 
-func (k *PublicKey) SetPEM() error {
+func parsePEM(k PublicKey) (*rsa.PublicKey, error) {
 	if k.Kty != "RSA" {
-		return fmt.Errorf("KTY %s must be RSA", k.Kty)
+		return nil, fmt.Errorf("KTY %s must be RSA", k.Kty)
 	}
 
 	n, err := base64.RawURLEncoding.DecodeString(k.N)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	e := 0
 	if k.E == "AQAB" || k.E == "AAEAAQ" {
 		e = 65537
 	} else {
-		return fmt.Errorf("E %s is invalid", k.E)
+		return nil, fmt.Errorf("E %s is invalid", k.E)
 	}
 
-	k.PEM = &rsa.PublicKey{
+	return &rsa.PublicKey{
 		N: new(big.Int).SetBytes(n),
 		E: e,
-	}
-	return nil
+	}, nil
 }
