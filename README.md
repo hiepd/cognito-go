@@ -1,2 +1,2 @@
-# cognito-go [![build](https://travis-ci.com/hiepd/cognito-go.svg?branch=master)](https://travis-ci.com/github/hiepd/cognito-go)  [![Go Report Card](https://goreportcard.com/badge/github.com/hiepd/cognito-go)](https://goreportcard.com/report/github.com/hiepd/cognito-go)
+# cognito-go [![build](https://travis-ci.com/hiepd/cognito-go.svg?branch=master)](https://travis-ci.com/github/hiepd/cognito-go)  [![Go Report Card](https://goreportcard.com/badge/github.com/hiepd/cognito-go)](https://goreportcard.com/report/github.com/hiepd/cognito-go)  [![Coverage Status](https://coveralls.io/repos/github/hiepd/cognito-go/badge.svg?branch=master)](https://coveralls.io/github/hiepd/cognito-go?branch=master)
 JWT Authentication with AWS Cognito in Go + Gin Middleware
