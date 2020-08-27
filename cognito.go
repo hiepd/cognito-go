@@ -11,11 +11,17 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 )
 
 var (
 	ErrInvalidParam = errors.New("invalid param")
 )
+
+type Client interface {
+	VerifyToken(tokenStr string) (*jwt.Token, error)
+	Authorize() gin.HandlerFunc
+}
 
 type Cognito struct {
 	// AWS App Client ID
@@ -40,7 +46,7 @@ type PublicKey struct {
 
 type PublicKeys map[string]PublicKey
 
-func NewCognito(region, usePoolId, clientId string) (*Cognito, error) {
+func NewCognitoClient(region, usePoolId, clientId string) (Client, error) {
 	// validate region and usePoolId, make sure they are present
 	if region == "" || usePoolId == "" {
 		return nil, fmt.Errorf("invalid region or use pool id: %w", ErrInvalidParam)
