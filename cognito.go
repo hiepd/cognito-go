@@ -18,6 +18,7 @@ var (
 	ErrInvalidParam = errors.New("invalid param")
 )
 
+//go:generate mockgen -source=cognito.go -package=cognito -destination=mocks/cognito.go
 type Client interface {
 	VerifyToken(tokenStr string) (*jwt.Token, error)
 	Authorize() gin.HandlerFunc
