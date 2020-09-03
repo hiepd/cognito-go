@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
@@ -21,6 +22,7 @@ func (cog *Cognito) Authorize() gin.HandlerFunc {
 			return
 		}
 		c.Set("token", token)
+		c.Set("username", token.Claims.(jwt.MapClaims)["username"])
 		c.Next()
 	}
 }
