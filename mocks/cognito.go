@@ -50,15 +50,13 @@ func (mr *MockClientMockRecorder) VerifyToken(tokenStr interface{}) *gomock.Call
 }
 
 // Authorize mocks base method
-func (m *MockClient) Authorize() gin.HandlerFunc {
+func (m *MockClient) Authorize(c *gin.Context) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Authorize")
-	ret0, _ := ret[0].(gin.HandlerFunc)
-	return ret0
+	m.ctrl.Call(m, "Authorize", c)
 }
 
 // Authorize indicates an expected call of Authorize
-func (mr *MockClientMockRecorder) Authorize() *gomock.Call {
+func (mr *MockClientMockRecorder) Authorize(c interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authorize", reflect.TypeOf((*MockClient)(nil).Authorize))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authorize", reflect.TypeOf((*MockClient)(nil).Authorize), c)
 }

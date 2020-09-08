@@ -155,7 +155,7 @@ mQIDAQAB
 				PublicKeys: tt.fields.PublicKeys,
 			}
 			r := gin.New()
-			r.GET("/user", cog.Authorize(), func(c *gin.Context) {
+			r.GET("/user", cog.Authorize, func(c *gin.Context) {
 				token, ok := c.Get("token")
 				if tt.wantToken != nil {
 					assert.True(t, ok)
