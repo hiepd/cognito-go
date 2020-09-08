@@ -12,12 +12,12 @@ import (
 func (cog *Cognito) Authorize(c *gin.Context) {
 	tokenHeader, err := tokenFromAuthHeader(c.Request)
 	if err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"message": "invalid Authorization header"})
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "invalid Authorization header"})
 		return
 	}
 	token, err := cog.VerifyToken(tokenHeader)
 	if err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"message": "invalid token"})
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "invalid token"})
 		return
 	}
 	c.Set("token", token)
