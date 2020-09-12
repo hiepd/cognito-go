@@ -21,7 +21,7 @@ func (cog *Cognito) Authorize(c *gin.Context) {
 		return
 	}
 	c.Set("token", token)
-	c.Set("username", token.Claims.(jwt.MapClaims)["username"])
+	c.Set("email", token.Claims.(jwt.MapClaims)["email"])
 	c.Next()
 }
 
